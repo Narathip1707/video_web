@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # Redis Queue - เบาที่สุด
+  redis:
+    image: redis:7-alpine
+    container_name: video-redis
+    ports:
+      - "6380:6379"
+    command: redis-server --maxmemory 30mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+  
+  # Upload Service - รับไฟล์และส่งเข้า queue
+  upload-service:
+    build: 
+      context: ./upload-service
+      dockerfile: Dockerfile
+    container_name: video-upload
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+        reservations:
+          memory: 20M
+  
+  # Processing Worker - ประมวลผลวีดีโอ
+  processing-worker:
+    build:
+      context: ./processing-worker
+      dockerfile: Dockerfile
+    container_name: video-worker
+    ports:
+      - "3003:3000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 120M
+        reservations:
+          memory: 80M
+  
+  # Frontend - Simple HTML Interface
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: video-frontend
+    ports:
+      - "3001:80"
+    environment:
+      - UPLOAD_SERVICE_URL=http://localhost:3002
+      - WORKER_SERVICE_URL=http://localhost:3003
+    depends_on:
+      - upload-service
+      - processing-worker
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 40M
+        reservations:
+          memory: 20M
+
+volumes:
+  uploads:
+  outputs:
+
+networks:
+  default:
+    name: video-processing-network
