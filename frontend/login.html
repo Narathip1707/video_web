@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 Video App - เข้าสู่ระบบ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            min-width: 400px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .auth-tab.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input.error {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submit-btn .loading {
+            display: none;
+        }
+
+        .submit-btn.loading .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        .submit-btn.loading .text {
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .features {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .feature-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                min-width: unset;
+                width: 100%;
+                padding: 30px 20px;
+            }
+
+            .feature-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="logo">
+            <h1>🎬 Video App</h1>
+            <p>จัดการและแชร์วีดีโอของคุณ</p>
+        </div>
+
+        <div class="auth-tabs">
+            <div class="auth-tab active" onclick="switchTab('login')">เข้าสู่ระบบ</div>
+            <div class="auth-tab" onclick="switchTab('register')">สมัครสมาชิก</div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="auth-form active">
+            <div class="form-group">
+                <label for="loginUsername">ชื่อผู้ใช้ หรือ อีเมล</label>
+                <input type="text" id="loginUsername" required>
+                <div class="error-message" id="loginUsernameError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="loginPassword">รหัสผ่าน</label>
+                <input type="password" id="loginPassword" required>
+                <div class="error-message" id="loginPasswordError"></div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <span class="loading">⏳</span>
+                <span class="text">เข้าสู่ระบบ</span>
+            </button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="registerForm" class="auth-form">
+            <div class="form-group">
+                <label for="registerUsername">ชื่อผู้ใช้</label>
+                <input type="text" id="registerUsername" required>
+                <div class="error-message" id="registerUsernameError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="registerEmail">อีเมล</label>
+                <input type="email" id="registerEmail" required>
+                <div class="error-message" id="registerEmailError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="registerDisplayName">ชื่อที่แสดง</label>
+                <input type="text" id="registerDisplayName" placeholder="ไม่ระบุจะใช้ชื่อผู้ใช้">
+                <div class="error-message" id="registerDisplayNameError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="registerPassword">รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)</label>
+                <input type="password" id="registerPassword" required>
+                <div class="error-message" id="registerPasswordError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="registerConfirmPassword">ยืนยันรหัสผ่าน</label>
+                <input type="password" id="registerConfirmPassword" required>
+                <div class="error-message" id="registerConfirmPasswordError"></div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <span class="loading">⏳</span>
+                <span class="text">สมัครสมาชิก</span>
+            </button>
+        </form>
+
+        <div class="features">
+            <h3>✨ ฟีเจอร์หลัก</h3>
+            <div class="feature-list">
+                <div class="feature-item">🎬 อัปโหลดวีดีโอ</div>
+                <div class="feature-item">🔧 ประมวลผลอัตโนมัติ</div>
+                <div class="feature-item">🎵 แปลงไฟล์เสียง</div>
+                <div class="feature-item">📱 ใช้งานง่าย</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3004';
+        
+        function switchTab(tab) {
+            // Switch tab styles
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Form').classList.add('active');
+            
+            // Clear alerts and errors
+            clearAlerts();
+            clearErrors();
+        }
+
+        function showAlert(message, type = 'error') {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function clearAlerts() {
+            document.getElementById('alertContainer').innerHTML = '';
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+            document.querySelectorAll('input').forEach(input => {
+                input.classList.remove('error');
+            });
+        }
+
+        function showFieldError(fieldId, message) {
+            const input = document.getElementById(fieldId);
+            const errorEl = document.getElementById(fieldId + 'Error');
+            
+            input.classList.add('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function setButtonLoading(buttonEl, loading) {
+            if (loading) {
+                buttonEl.classList.add('loading');
+                buttonEl.disabled = true;
+            } else {
+                buttonEl.classList.remove('loading');
+                buttonEl.disabled = false;
+            }
+        }
+
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+            clearAlerts();
+
+            const submitBtn = e.target.querySelector('.submit-btn');
+            setButtonLoading(submitBtn, true);
+
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Store token
+                    localStorage.setItem('token', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    
+                    console.log('Login successful, redirecting to home');
+                    window.location.href = 'home.html';
+                } else {
+                    if (result.errors) {
+                        result.errors.forEach(error => {
+                            if (error.param === 'username') {
+                                showFieldError('loginUsername', error.msg);
+                            } else if (error.param === 'password') {
+                                showFieldError('loginPassword', error.msg);
+                            }
+                        });
+                    } else {
+                        showAlert(result.error || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+                    }
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+            } finally {
+                setButtonLoading(submitBtn, false);
+            }
+        });
+
+        // Register Form Handler
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+            clearAlerts();
+
+            const submitBtn = e.target.querySelector('.submit-btn');
+            setButtonLoading(submitBtn, true);
+
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const displayName = document.getElementById('registerDisplayName').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+            // Client-side validation
+            let hasError = false;
+
+            if (password !== confirmPassword) {
+                showFieldError('registerConfirmPassword', 'รหัสผ่านไม่ตรงกัน');
+                hasError = true;
+            }
+
+            if (password.length < 6) {
+                showFieldError('registerPassword', 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+                hasError = true;
+            }
+
+            if (username.length < 3) {
+                showFieldError('registerUsername', 'ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร');
+                hasError = true;
+            }
+
+            if (hasError) {
+                setButtonLoading(submitBtn, false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        username, 
+                        email, 
+                        password,
+                        displayName: displayName || username
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Store token
+                    localStorage.setItem('token', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    
+                    console.log('Registration successful, redirecting to home');
+                    window.location.href = 'home.html';
+                } else {
+                    if (result.errors) {
+                        result.errors.forEach(error => {
+                            if (error.param === 'username') {
+                                showFieldError('registerUsername', error.msg);
+                            } else if (error.param === 'email') {
+                                showFieldError('registerEmail', error.msg);
+                            } else if (error.param === 'password') {
+                                showFieldError('registerPassword', error.msg);
+                            }
+                        });
+                    } else {
+                        showAlert(result.error || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
+                    }
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                showAlert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+            } finally {
+                setButtonLoading(submitBtn, false);
+            }
+        });
+
+        // Check if already logged in and token is valid
+        function checkExistingLogin() {
+            // ไม่ตรวจสอบ auto-login ถ้ามาจาก home.html (ป้องกัน redirect loop)
+            const referrer = document.referrer;
+            if (referrer && referrer.includes('home.html')) {
+                console.log('Came from home.html, skipping auto-login check');
+                return;
+            }
+            
+            const token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
+            console.log('Check existing login - Token:', token ? 'Found' : 'None', 'User:', userStr ? 'Found' : 'None');
+            
+            if (token) {
+                // ตรวจสอบว่า token หมดอายุหรือไม่
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    
+                    if (payload.exp > currentTime) {
+                        // Token ยังไม่หมดอายุ
+                        console.log('Valid token found, redirecting to home');
+                        window.location.href = 'home.html';
+                    } else {
+                        // Token หมดอายุแล้ว
+                        console.log('Token expired, removing from storage');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                    }
+                } catch (e) {
+                    // Token format ไม่ถูกต้อง
+                    console.log('Invalid token format, removing from storage');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                }
+            } else {
+                console.log('No existing login found');
+            }
+        }
+        
+        checkExistingLogin();
+    </script>
+</body>
+</html>
