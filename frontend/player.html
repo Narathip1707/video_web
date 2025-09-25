@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 Video Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .player-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .video-title {
+            flex: 1;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 0 20px;
+        }
+
+        .video-info-btn {
+            padding: 10px 20px;
+            background: rgba(102, 126, 234, 0.8);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .video-info-btn:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+        }
+
+        .player-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .video-player {
+            width: 100%;
+            max-width: 1200px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .video-player video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .loading-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #ff6b6b;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 15px;
+        }
+
+        .error-state h3 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .error-state p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .retry-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .retry-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .video-info-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            transition: right 0.3s ease;
+            z-index: 20;
+            overflow-y: auto;
+        }
+
+        .video-info-panel.open {
+            right: 0;
+        }
+
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .close-info {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .close-info:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-label {
+            color: #ccc;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: white;
+            font-weight: bold;
+        }
+
+        .download-section {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .controls-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            padding: 40px 20px 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-player:hover .controls-overlay {
+            opacity: 1;
+        }
+
+        .custom-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .progress-container {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #667eea;
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .time-display {
+            font-size: 0.9em;
+            color: #ccc;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .fullscreen-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .video-title {
+                margin: 0;
+                font-size: 1.2em;
+            }
+
+            .video-info-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .player-wrapper {
+                padding: 10px;
+            }
+
+            .custom-controls {
+                gap: 10px;
+            }
+
+            .control-btn {
+                font-size: 1.2em;
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <header class="header">
+            <a href="home.html" class="back-btn">
+                ← กลับ
+            </a>
+            <h1 class="video-title" id="videoTitle">กำลังโหลด...</h1>
+            <button class="video-info-btn" onclick="toggleInfoPanel()">
+                ℹ️ รายละเอียด
+            </button>
+        </header>
+
+        <div class="player-wrapper">
+            <div class="video-player" id="videoPlayer">
+                <div id="loadingState" class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>กำลังโหลดวีดีโอ...</p>
+                </div>
+
+                <div id="errorState" class="error-state" style="display: none;">
+                    <h3>❌ เกิดข้อผิดพลาด</h3>
+                    <p id="errorMessage">ไม่สามารถโหลดวีดีโอได้</p>
+                    <button class="retry-btn" onclick="loadVideo()">🔄 ลองใหม่</button>
+                </div>
+
+                <video id="videoElement" style="display: none;" controls>
+                    <source id="videoSource" type="video/mp4">
+                    เบราว์เซอร์ของคุณไม่รองรับการเล่นวีดีโอ
+                </video>
+
+                <div class="controls-overlay">
+                    <div class="custom-controls">
+                        <button class="control-btn" id="playPauseBtn" onclick="togglePlayPause()">▶️</button>
+                        <div class="progress-container" onclick="seekVideo(event)">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+                        <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="video-info-panel" id="infoPanelPanel">
+        <div class="info-header">
+            <h2>📹 รายละเอียดวีดีโอ</h2>
+            <button class="close-info" onclick="toggleInfoPanel()">✕</button>
+        </div>
+
+        <div class="info-section">
+            <h3>📄 ข้อมูลพื้นฐาน</h3>
+            <div class="info-item">
+                <span class="info-label">ชื่อไฟล์:</span>
+                <span class="info-value" id="infoFileName">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">ขนาดไฟล์:</span>
+                <span class="info-value" id="infoFileSize">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">ความยาว:</span>
+                <span class="info-value" id="infoDuration">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">ความละเอียด:</span>
+                <span class="info-value" id="infoResolution">-</span>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3>📊 สถานะ</h3>
+            <div class="info-item">
+                <span class="info-label">สถานะ:</span>
+                <span class="info-value" id="infoStatus">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">วันที่อัปโหลด:</span>
+                <span class="info-value" id="infoCreatedAt">-</span>
+            </div>
+        </div>
+
+        <div class="download-section">
+            <h3>💾 ดาวน์โหลด</h3>
+            <button class="download-btn" id="downloadOriginal" onclick="downloadFile('original')">
+                📁 ไฟล์ต้นฉบับ
+            </button>
+            <button class="download-btn" id="downloadCompressed" onclick="downloadFile('compressed')">
+                🗜️ ไฟล์บีบอัด
+            </button>
+            <button class="download-btn" id="downloadThumbnail" onclick="downloadFile('thumbnail')">
+                🖼️ รูปตัวอย่าง
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const AUTH_API = 'http://localhost:3004';
+        const UPLOAD_API = 'http://localhost:3002';
+        
+        let currentVideo = null;
+        let videoElement = null;
+        let isInfoPanelOpen = false;
+
+        async function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${AUTH_API}/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Token verification failed');
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                return false;
+            }
+        }
+
+        async function loadVideo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const videoId = urlParams.get('id');
+            
+            if (!videoId) {
+                showError('ไม่พบ ID วีดีโอ');
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            
+            try {
+                // Load video info from auth service
+                const response = await fetch(`${AUTH_API}/videos`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentVideo = result.videos.find(v => v.id == videoId);
+                    
+                    if (!currentVideo) {
+                        showError('ไม่พบวีดีโอที่ต้องการ');
+                        return;
+                    }
+
+                    if (currentVideo.status !== 'completed') {
+                        showError('วีดีโอยังประมวลผลไม่เสร็จ');
+                        return;
+                    }
+
+                    setupVideo();
+                } else {
+                    throw new Error(result.error || 'Failed to load video info');
+                }
+            } catch (error) {
+                console.error('Failed to load video:', error);
+                showError(`ไม่สามารถโหลดวีดีโอได้: ${error.message}`);
+            }
+        }
+
+        function setupVideo() {
+            // Update title
+            document.getElementById('videoTitle').textContent = currentVideo.original_name;
+            
+            // Setup video element
+            videoElement = document.getElementById('videoElement');
+            const videoSource = document.getElementById('videoSource');
+            
+            // Use compressed version if available, otherwise original
+            const videoUrl = currentVideo.compressed_path ? 
+                `/outputs/${currentVideo.compressed_path.split('/').pop()}` :
+                `/uploads/${currentVideo.file_name}`;
+                
+            videoSource.src = videoUrl;
+            
+            // Show video element and hide loading
+            document.getElementById('loadingState').style.display = 'none';
+            videoElement.style.display = 'block';
+            
+            // Setup video event listeners
+            setupVideoControls();
+            
+            // Update info panel
+            updateInfoPanel();
+            
+            // Load video
+            videoElement.load();
+        }
+
+        function setupVideoControls() {
+            videoElement.addEventListener('loadedmetadata', () => {
+                updateTimeDisplay();
+            });
+
+            videoElement.addEventListener('timeupdate', () => {
+                updateProgress();
+                updateTimeDisplay();
+            });
+
+            videoElement.addEventListener('play', () => {
+                document.getElementById('playPauseBtn').textContent = '⏸️';
+            });
+
+            videoElement.addEventListener('pause', () => {
+                document.getElementById('playPauseBtn').textContent = '▶️';
+            });
+
+            videoElement.addEventListener('error', (e) => {
+                console.error('Video error:', e);
+                showError('ไม่สามารถเล่นวีดีโอได้');
+            });
+        }
+
+        function updateProgress() {
+            if (videoElement.duration) {
+                const progress = (videoElement.currentTime / videoElement.duration) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+            }
+        }
+
+        function updateTimeDisplay() {
+            const current = formatTime(videoElement.currentTime || 0);
+            const duration = formatTime(videoElement.duration || 0);
+            document.getElementById('timeDisplay').textContent = `${current} / ${duration}`;
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function togglePlayPause() {
+            if (videoElement.paused) {
+                videoElement.play();
+            } else {
+                videoElement.pause();
+            }
+        }
+
+        function seekVideo(event) {
+            const progressContainer = event.currentTarget;
+            const rect = progressContainer.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const width = rect.width;
+            const percentage = clickX / width;
+            
+            if (videoElement.duration) {
+                videoElement.currentTime = videoElement.duration * percentage;
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.getElementById('videoPlayer').requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function toggleInfoPanel() {
+            isInfoPanelOpen = !isInfoPanelOpen;
+            const panel = document.getElementById('infoPanelPanel');
+            
+            if (isInfoPanelOpen) {
+                panel.classList.add('open');
+            } else {
+                panel.classList.remove('open');
+            }
+        }
+
+        function updateInfoPanel() {
+            if (!currentVideo) return;
+
+            document.getElementById('infoFileName').textContent = currentVideo.original_name;
+            document.getElementById('infoFileSize').textContent = formatFileSize(currentVideo.file_size);
+            document.getElementById('infoDuration').textContent = formatDuration(currentVideo.duration);
+            document.getElementById('infoResolution').textContent = 
+                currentVideo.width && currentVideo.height ? 
+                `${currentVideo.width}x${currentVideo.height}` : 'N/A';
+            document.getElementById('infoStatus').textContent = getStatusText(currentVideo.status);
+            document.getElementById('infoCreatedAt').textContent = 
+                new Date(currentVideo.created_at).toLocaleString('th-TH');
+
+            // Update download buttons
+            updateDownloadButtons();
+        }
+
+        function updateDownloadButtons() {
+            const originalBtn = document.getElementById('downloadOriginal');
+            const compressedBtn = document.getElementById('downloadCompressed');
+            const thumbnailBtn = document.getElementById('downloadThumbnail');
+
+            originalBtn.disabled = !currentVideo.file_name;
+            compressedBtn.disabled = !currentVideo.compressed_path;
+            thumbnailBtn.disabled = !currentVideo.thumbnail_path;
+        }
+
+        function downloadFile(type) {
+            if (!currentVideo) return;
+
+            let url = '';
+            switch (type) {
+                case 'original':
+                    url = `/uploads/${currentVideo.file_name}`;
+                    break;
+                case 'compressed':
+                    url = currentVideo.compressed_path ? 
+                        `/outputs/${currentVideo.compressed_path.split('/').pop()}` : '';
+                    break;
+                case 'thumbnail':
+                    url = currentVideo.thumbnail_path ? 
+                        `/outputs/${currentVideo.thumbnail_path.split('/').pop()}` : '';
+                    break;
+            }
+
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return 'N/A';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'completed': 'เสร็จสิ้น',
+                'processing': 'กำลังประมวลผล',
+                'queued': 'รอประมวลผล',
+                'failed': 'ล้มเหลว'
+            };
+            return statusMap[status] || status;
+        }
+
+        function showError(message) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorState').style.display = 'block';
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!videoElement) return;
+
+            switch (e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    videoElement.currentTime = Math.max(0, videoElement.currentTime - 10);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    videoElement.currentTime = Math.min(videoElement.duration, videoElement.currentTime + 10);
+                    break;
+                case 'KeyF':
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+                case 'Escape':
+                    if (isInfoPanelOpen) {
+                        toggleInfoPanel();
+                    }
+                    break;
+            }
+        });
+
+        // Initialize page
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (await checkAuth()) {
+                loadVideo();
+            }
+        });
+    </script>
+</body>
+</html>
