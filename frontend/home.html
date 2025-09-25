@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 Video App - หน้าหลัก</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-item {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #333;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .login-required {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .login-required h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .login-required p {
+            color: #856404;
+            margin-bottom: 25px;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title h1 {
+            color: #333;
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .page-title p {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .videos-section {
+            margin-top: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #333;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn.active,
+        .toggle-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .videos-list {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .video-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .video-info {
+            padding: 20px;
+        }
+
+        .video-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .video-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .video-duration {
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .video-status {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-play {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-play:hover {
+            background: #218838;
+        }
+
+        .btn-download {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #138496;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .page-title h1 {
+                font-size: 2.5em;
+            }
+
+            .videos-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">🎬 Video App</div>
+            <div class="nav-menu">
+                <a href="home.html" class="nav-item">🏠 หน้าหลัก</a>
+                <a href="manage.html" class="nav-item">⚙️ จัดการวีดีโอ</a>
+                <a href="index.html" class="nav-item">📤 อัปโหลด</a>
+                <button class="nav-item" onclick="logout()">🚪 ออกจากระบบ</button>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span id="userName">User</span>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="page-title">
+            <h1>🎬 คลังวีดีโอของคุณ</h1>
+            <p>จัดการและเพลิดเพลินกับวีดีโอทั้งหมด</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalVideos">0</div>
+                <div class="stat-label">วีดีโอทั้งหมด</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completedVideos">0</div>
+                <div class="stat-label">ประมวลผลเสร็จ</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="processingVideos">0</div>
+                <div class="stat-label">กำลังประมวลผล</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalSize">0 MB</div>
+                <div class="stat-label">ขนาดรวม</div>
+            </div>
+        </div>
+
+        <div class="videos-section">
+            <div class="section-header">
+                <h2 class="section-title">📼 วีดีโอของคุณ</h2>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" onclick="toggleView('grid')">🔳 ตาราง</button>
+                    <button class="toggle-btn" onclick="toggleView('list')">📋 รายการ</button>
+                </div>
+            </div>
+
+            <!-- Login required message -->
+            <div id="loginRequired" class="login-required" style="display: none;">
+                <h3>🔒 กรุณาเข้าสู่ระบบ</h3>
+                <p>คุณต้องเข้าสู่ระบบเพื่อดูรายการวีดีโอของคุณ</p>
+                <a href="login.html" class="btn" style="margin-right: 10px;">🔑 เข้าสู่ระบบ</a>
+                <a href="login.html#register" class="btn">👤 สมัครสมาชิก</a>
+            </div>
+
+            <div id="loadingState" class="loading">
+                <div class="loading-spinner"></div>
+                <p>กำลังโหลดวีดีโอ...</p>
+            </div>
+
+            <div id="videosGrid" class="videos-grid" style="display: none;">
+                <!-- Videos will be loaded here -->
+            </div>
+
+            <div id="videosList" class="videos-list">
+                <!-- List view will be loaded here -->
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h3>🎬 ยังไม่มีวีดีโอ</h3>
+                <p>เริ่มต้นด้วยการอัปโหลดวีดีโอแรกของคุณ</p>
+                <a href="index.html" class="nav-item">📤 อัปโหลดวีดีโอ</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const AUTH_API = 'http://localhost:3004';
+        const UPLOAD_API = 'http://localhost:3002';
+        
+        let currentUser = null;
+        let videos = [];
+        let currentView = 'grid';
+
+        async function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            const user = localStorage.getItem('user');
+            
+            if (!token || !user) {
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${AUTH_API}/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Token verification failed');
+                }
+
+                currentUser = JSON.parse(user);
+                updateUserDisplay();
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                return false;
+            }
+        }
+
+        function updateUserDisplay() {
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.displayName || currentUser.username;
+                document.getElementById('userAvatar').textContent = (currentUser.displayName || currentUser.username).charAt(0).toUpperCase();
+            }
+        }
+
+        async function loadVideos() {
+            const token = localStorage.getItem('authToken');
+            
+            try {
+                const response = await fetch(`${AUTH_API}/videos`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    videos = result.videos;
+                    updateStats();
+                    displayVideos();
+                } else {
+                    throw new Error(result.error || 'Failed to load videos');
+                }
+            } catch (error) {
+                console.error('Failed to load videos:', error);
+                document.getElementById('loadingState').innerHTML = `
+                    <p style="color: #dc3545;">❌ ไม่สามารถโหลดวีดีโอได้: ${error.message}</p>
+                `;
+            }
+        }
+
+        function updateStats() {
+            const total = videos.length;
+            const completed = videos.filter(v => v.status === 'completed').length;
+            const processing = videos.filter(v => v.status === 'processing').length;
+            const totalSizeBytes = videos.reduce((sum, v) => sum + (v.file_size || 0), 0);
+            const totalSizeMB = (totalSizeBytes / (1024 * 1024)).toFixed(1);
+
+            document.getElementById('totalVideos').textContent = total;
+            document.getElementById('completedVideos').textContent = completed;
+            document.getElementById('processingVideos').textContent = processing;
+            document.getElementById('totalSize').textContent = `${totalSizeMB} MB`;
+        }
+
+        function displayVideos() {
+            document.getElementById('loadingState').style.display = 'none';
+            
+            // แสดงเฉพาะไฟล์ที่ประมวลผลเสร็จแล้ว
+            const processedVideos = videos.filter(video => 
+                video.status === 'completed'
+            );
+            
+            if (processedVideos.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('videosGrid').style.display = 'none';
+                document.getElementById('videosList').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            
+            if (currentView === 'grid') {
+                document.getElementById('videosGrid').style.display = 'grid';
+                document.getElementById('videosList').style.display = 'none';
+                renderGridView();
+            } else {
+                document.getElementById('videosGrid').style.display = 'none';
+                document.getElementById('videosList').style.display = 'flex';
+                renderListView();
+            }
+        }
+
+        function renderGridView() {
+            const container = document.getElementById('videosGrid');
+            const processedVideos = videos.filter(video => 
+                video.status === 'completed'
+            );
+            container.innerHTML = processedVideos.map(video => {
+                const duration = formatDuration(video.duration);
+                const createdAt = new Date(video.created_at).toLocaleDateString('th-TH');
+                const thumbnailUrl = video.thumbnail_path ? 
+                    `${UPLOAD_API}/download/${video.id}_thumbnail.jpg` : null;
+
+                return `
+                    <div class="video-card" onclick="playVideo('${video.id}')">
+                        <div class="video-thumbnail">
+                            ${thumbnailUrl ? 
+                                `<img src="${thumbnailUrl}" alt="Thumbnail" onerror="this.style.display='none'">` : 
+                                '🎬'
+                            }
+                            <div class="play-overlay">▶️</div>
+                        </div>
+                        <div class="video-info">
+                            <div class="video-title">${video.original_name}</div>
+                            <div class="video-meta">
+                                <span>📅 ${createdAt}</span>
+                                <span class="video-duration">⏱️ ${duration}</span>
+                            </div>
+                            <div class="video-status status-${video.status}">${getStatusText(video.status)}</div>
+                            <div class="video-actions">
+                                <button class="action-btn btn-play" onclick="playVideo('${video.id}'); event.stopPropagation();">
+                                    ▶️ เล่น
+                                </button>
+                                <button class="action-btn btn-download" onclick="downloadVideo('${video.id}'); event.stopPropagation();">
+                                    💾 ดาวน์โหลด
+                                </button>
+                                <button class="action-btn btn-delete" onclick="deleteVideo('${video.id}'); event.stopPropagation();">
+                                    🗑️ ลบ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderListView() {
+            const container = document.getElementById('videosList');
+            const processedVideos = videos.filter(video => 
+                video.status === 'completed'
+            );
+            container.innerHTML = processedVideos.map(video => {
+                const duration = formatDuration(video.duration);
+                const createdAt = new Date(video.created_at).toLocaleDateString('th-TH');
+                
+                return `
+                    <div class="video-card" style="display: flex; height: 120px;" onclick="playVideo('${video.id}')">
+                        <div class="video-thumbnail" style="width: 200px; height: 120px; flex-shrink: 0;">
+                            ${video.thumbnail_path ? 
+                                `<img src="${UPLOAD_API}/download/${video.id}_thumbnail.jpg" alt="Thumbnail">` : 
+                                '🎬'
+                            }
+                            <div class="play-overlay">▶️</div>
+                        </div>
+                        <div class="video-info" style="flex: 1;">
+                            <div class="video-title">${video.original_name}</div>
+                            <div class="video-meta">
+                                <span>📅 ${createdAt}</span>
+                                <span class="video-duration">⏱️ ${duration}</span>
+                                <span class="video-status status-${video.status}">${getStatusText(video.status)}</span>
+                            </div>
+                            <div class="video-actions" style="margin-top: auto;">
+                                <button class="action-btn btn-play" onclick="playVideo('${video.id}'); event.stopPropagation();">▶️ เล่น</button>
+                                <button class="action-btn btn-download" onclick="downloadVideo('${video.id}'); event.stopPropagation();">💾 ดาวน์โหลด</button>
+                                <button class="action-btn btn-delete" onclick="deleteVideo('${video.id}'); event.stopPropagation();">🗑️ ลบ</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'completed': 'เสร็จสิ้น',
+                'processing': 'กำลังประมวลผล',
+                'queued': 'รอประมวลผล',
+                'failed': 'ล้มเหลว'
+            };
+            return statusMap[status] || status;
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return 'N/A';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            
+            // Update toggle buttons
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Re-render videos
+            displayVideos();
+        }
+
+        function playVideo(videoId) {
+            window.location.href = `player.html?id=${videoId}`;
+        }
+
+        function downloadVideo(videoId) {
+            const video = videos.find(v => v.id == videoId);
+            if (video && video.compressed_path) {
+                window.open(`${UPLOAD_API}/download/${videoId}_compressed.mp4`, '_blank');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize page
+        window.addEventListener('DOMContentLoaded', async () => {
+            const isLoggedIn = await checkAuth();
+            
+            if (isLoggedIn) {
+                document.getElementById('loginRequired').style.display = 'none';
+                document.getElementById('loadingState').style.display = 'block';
+                loadVideos();
+                
+                // Auto-refresh every 10 seconds
+                setInterval(loadVideos, 10000);
+            } else {
+                // Show login required message
+                document.getElementById('loginRequired').style.display = 'block';
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('videosGrid').style.display = 'none';
+                document.getElementById('videosList').style.display = 'none';
+                
+                // Update navigation to show login options
+                updateGuestNavigation();
+            }
+        });
+
+        function updateGuestNavigation() {
+            const userInfo = document.querySelector('.user-info');
+            if (userInfo) {
+                userInfo.innerHTML = `
+                    <a href="login.html" class="nav-item">🔑 เข้าสู่ระบบ</a>
+                    <a href="login.html#register" class="nav-item">👤 สมัครสมาชิก</a>
+                `;
+            }
+        }
+
+        // Debug function - เรียกได้จาก console
+        function debugAuth() {
+            const token = localStorage.getItem('token');
+            console.log('Current token:', token);
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    console.log('Token payload:', payload);
+                    console.log('Token expires:', new Date(payload.exp * 1000));
+                } catch (e) {
+                    console.log('Invalid token format');
+                }
+            }
+        }
+        
+        // Clear storage function
+        function clearAuth() {
+            localStorage.clear();
+            alert('Storage cleared! กรุณาล็อกอินใหม่');
+            window.location.href = 'login.html';
+        }
+
+        // Add to global scope
+        window.debugAuth = debugAuth;
+        window.clearAuth = clearAuth;
+
+        async function deleteVideo(videoId) {
+            if (!confirm('คุณแน่ใจหรือไม่ที่จะลบวิดีโอนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                console.log('🔐 Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'No token');
+                console.log('🌐 Making DELETE request to:', `${AUTH_API}/videos/${videoId}`);
+                
+                const response = await fetch(`${AUTH_API}/videos/${videoId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Delete response status:', response.status);
+                console.log('Delete response headers:', response.headers);
+                
+                const responseText = await response.text();
+                console.log('Delete response text:', responseText);
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
+                }
+                
+                // ถ้า token หมดอายุ redirect ไป login
+                if (response.status === 403 && result.error && result.error.includes('token')) {
+                    alert('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
+                    localStorage.removeItem('token');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (result.success) {
+                    // รีเฟรชรายการวิดีโอ
+                    await loadVideos();
+                    alert('ลบวิดีโอเรียบร้อยแล้ว');
+                } else {
+                    throw new Error(result.error || 'ไม่สามารถลบวิดีโอได้');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('เกิดข้อผิดพลาดในการลบวิดีโอ: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
