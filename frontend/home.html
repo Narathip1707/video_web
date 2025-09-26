@@ -174,6 +174,107 @@
             font-size: 1.1em;
         }
 
+        .upload-section {
+            margin: 40px 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .videos-section {
             margin-top: 40px;
         }
@@ -444,9 +545,9 @@
         <nav class="nav">
             <div class="logo">🎬 Video App</div>
             <div class="nav-menu">
-                <a href="home.html" class="nav-item">🏠 หน้าหลัก</a>
+                <a href="/" class="nav-item">🏠 หน้าหลัก</a>
                 <a href="manage.html" class="nav-item">⚙️ จัดการวีดีโอ</a>
-                <a href="index.html" class="nav-item">📤 อัปโหลด</a>
+                <a href="#upload-section" class="nav-item" onclick="scrollToUpload()">📤 อัปโหลด</a>
                 <button class="nav-item" onclick="logout()">🚪 ออกจากระบบ</button>
             </div>
             <div class="user-info">
@@ -478,6 +579,30 @@
             <div class="stat-card">
                 <div class="stat-number" id="totalSize">0 MB</div>
                 <div class="stat-label">ขนาดรวม</div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section" id="upload-section">
+            <h2 class="section-title">📤 อัพโหลดวีดีโอใหม่</h2>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">🎥</div>
+                <div class="upload-text">ลากไฟล์วีดีโอมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</div>
+                <input type="file" class="file-input" id="fileInput" accept="video/*,audio/*">
+                <button class="btn upload-btn" id="chooseFileBtn">
+                    📁 เลือกไฟล์วีดีโอ
+                </button>
+            </div>
+            
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div style="margin-bottom: 10px;">
+                    <span id="progressText">กำลังอัพโหลด...</span>
+                    <span class="loading" id="uploadSpinner"></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
             </div>
         </div>
 
@@ -514,7 +639,7 @@
             <div id="emptyState" class="empty-state" style="display: none;">
                 <h3>🎬 ยังไม่มีวีดีโอ</h3>
                 <p>เริ่มต้นด้วยการอัปโหลดวีดีโอแรกของคุณ</p>
-                <a href="index.html" class="nav-item">📤 อัปโหลดวีดีโอ</a>
+                <a href="#upload-section" class="nav-item" onclick="scrollToUpload()">📤 อัปโหลดวีดีโอ</a>
             </div>
         </div>
     </div>
@@ -528,16 +653,33 @@
         let currentView = 'grid';
 
         async function checkAuth() {
-            const token = localStorage.getItem('authToken');
-            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
+            console.log('Checking auth - Token:', token ? 'Found' : 'Not found', 'User:', userStr ? 'Found' : 'Not found');
             
-            if (!token || !user) {
+            // ตรวจสอบว่ามี token และ user data หรือไม่
+            if (!token || !userStr) {
+                console.log('No token or user data, clearing auth');
+                clearAuthData();
                 return false;
             }
 
             try {
-                const response = await fetch(`${AUTH_API}/verify`, {
-                    method: 'POST',
+                // ตรวจสอบรูปแบบ token (JWT)
+                if (!isValidJWTFormat(token)) {
+                    console.error('Invalid JWT format');
+                    throw new Error('Invalid token format');
+                }
+
+                // ตรวจสอบว่า token หมดอายุหรือไม่ (client-side check)
+                if (isTokenExpired(token)) {
+                    console.error('Token expired (client-side check)');
+                    throw new Error('Token expired');
+                }
+
+                // ตรวจสอบกับ server
+                const response = await fetch(`${AUTH_API}/videos`, {
+                    method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -545,18 +687,45 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Token verification failed');
+                    if (response.status === 401 || response.status === 403) {
+                        throw new Error('Token validation failed on server');
+                    }
+                    throw new Error(`Server error: ${response.status}`);
                 }
 
-                currentUser = JSON.parse(user);
+                // Parse user data
+                currentUser = JSON.parse(userStr);
                 updateUserDisplay();
+                console.log('Auth check passed successfully');
                 return true;
+
             } catch (error) {
                 console.error('Auth check failed:', error);
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('user');
+                clearAuthData();
                 return false;
             }
+        }
+
+        function isValidJWTFormat(token) {
+            // JWT ควรมี 3 ส่วนแบ่งด้วย .
+            const parts = token.split('.');
+            return parts.length === 3;
+        }
+
+        function isTokenExpired(token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const currentTime = Math.floor(Date.now() / 1000);
+                return payload.exp < currentTime;
+            } catch (e) {
+                return true; // ถ้า decode ไม่ได้ถือว่าหมดอายุ
+            }
+        }
+
+        function clearAuthData() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            currentUser = null;
         }
 
         function updateUserDisplay() {
@@ -567,7 +736,7 @@
         }
 
         async function loadVideos() {
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('token');
             
             try {
                 const response = await fetch(`${AUTH_API}/videos`, {
@@ -642,10 +811,8 @@
             container.innerHTML = processedVideos.map(video => {
                 const duration = formatDuration(video.duration);
                 const createdAt = new Date(video.created_at).toLocaleDateString('th-TH');
-                const thumbnailUrl = video.thumbnail_path ? 
-                    `${UPLOAD_API}/download/${video.id}_thumbnail.jpg` : null;
-
-                return `
+                const thumbnailUrl = video.thumbnail_path ?
+                    `/outputs/${video.id}_thumbnail.jpg` : null;                return `
                     <div class="video-card" onclick="playVideo('${video.id}')">
                         <div class="video-thumbnail">
                             ${thumbnailUrl ? 
@@ -690,8 +857,8 @@
                 return `
                     <div class="video-card" style="display: flex; height: 120px;" onclick="playVideo('${video.id}')">
                         <div class="video-thumbnail" style="width: 200px; height: 120px; flex-shrink: 0;">
-                            ${video.thumbnail_path ? 
-                                `<img src="${UPLOAD_API}/download/${video.id}_thumbnail.jpg" alt="Thumbnail">` : 
+                            ${video.thumbnail_path ?
+                                `<img src="/outputs/${video.id}_thumbnail.jpg" alt="Thumbnail">` : 
                                 '🎬'
                             }
                             <div class="play-overlay">▶️</div>
@@ -749,36 +916,81 @@
         function downloadVideo(videoId) {
             const video = videos.find(v => v.id == videoId);
             if (video && video.compressed_path) {
-                window.open(`${UPLOAD_API}/download/${videoId}_compressed.mp4`, '_blank');
+                // Extract filename from compressed_path
+                const filename = video.compressed_path.split('/').pop();
+                window.open(`/outputs/${filename}`, '_blank');
             }
         }
 
         function logout() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
+            clearAuthData();
             window.location.href = 'login.html';
+        }
+
+        // Session management
+        function checkTokenPeriodically() {
+            setInterval(async () => {
+                const token = localStorage.getItem('token');
+                if (token && isTokenExpired(token)) {
+                    console.log('Token expired, redirecting to login');
+                    showTokenExpiredMessage();
+                    setTimeout(() => {
+                        clearAuthData();
+                        window.location.href = 'login.html';
+                    }, 3000);
+                }
+            }, 60000); // ตรวจสอบทุก 1 นาที
+        }
+
+        function showTokenExpiredMessage() {
+            const alertDiv = document.createElement('div');
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #f8d7da;
+                color: #721c24;
+                padding: 15px 20px;
+                border-radius: 5px;
+                border: 1px solid #f5c6cb;
+                z-index: 9999;
+                font-weight: bold;
+            `;
+            alertDiv.textContent = '🕐 Session หมดอายุแล้ว กำลังนำไปหน้าล็อกอิน...';
+            document.body.appendChild(alertDiv);
         }
 
         // Initialize page
         window.addEventListener('DOMContentLoaded', async () => {
+            // แสดง loading ก่อน
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('loginRequired').style.display = 'none';
+            
             const isLoggedIn = await checkAuth();
             
             if (isLoggedIn) {
                 document.getElementById('loginRequired').style.display = 'none';
                 document.getElementById('loadingState').style.display = 'block';
-                loadVideos();
                 
-                // Auto-refresh every 10 seconds
-                setInterval(loadVideos, 10000);
+                try {
+                    await loadVideos();
+                    // เริ่มตรวจสอบ token
+                    checkTokenPeriodically();
+                    
+                    // Auto-refresh videos every 30 seconds (เพิ่มเวลาขึ้น)
+                    setInterval(async () => {
+                        if (localStorage.getItem('token')) {
+                            await loadVideos();
+                        }
+                    }, 30000);
+                } catch (error) {
+                    console.error('Failed to load initial data:', error);
+                    document.getElementById('loadingState').style.display = 'none';
+                }
             } else {
-                // Show login required message
-                document.getElementById('loginRequired').style.display = 'block';
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('videosGrid').style.display = 'none';
-                document.getElementById('videosList').style.display = 'none';
-                
-                // Update navigation to show login options
-                updateGuestNavigation();
+                // Redirect to login if not authenticated
+                console.log('Not authenticated, redirecting to login');
+                window.location.href = 'login.html';
             }
         });
 
@@ -869,6 +1081,213 @@
                 console.error('Delete error:', error);
                 alert('เกิดข้อผิดพลาดในการลบวิดีโอ: ' + error.message);
             }
+        }
+
+        // Upload functionality
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const chooseFileBtn = document.getElementById('chooseFileBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        // เมื่อพร้อมใช้งานแล้ว
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeUpload();
+        });
+
+        function initializeUpload() {
+            // Drag and drop events
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    uploadFile(files[0]);
+                }
+            });
+
+            // แยก event listeners เพื่อป้องกันการเรียกซ้ำ
+            // ปุ่ม Choose File
+            chooseFileBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // ป้องกัน event bubbling
+                fileInput.click();
+            });
+            
+            // คลิกที่ upload area (แต่ไม่ใช่ปุ่ม)
+            uploadArea.addEventListener('click', (e) => {
+                // ถ้าคลิกที่ปุ่ม จะไม่เรียกใหม่
+                if (e.target.id !== 'chooseFileBtn' && !e.target.closest('#chooseFileBtn')) {
+                    fileInput.click();
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    uploadFile(e.target.files[0]);
+                }
+            });
+        }
+
+        async function uploadFile(file) {
+            // Check if user is logged in first
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('กรุณาเข้าสู่ระบบก่อนอัปโหลดไฟล์');
+                return;
+            }
+
+            // Support both video and audio files
+            const supportedTypes = ['video/', 'audio/'];
+            const isSupported = supportedTypes.some(type => file.type.startsWith(type));
+            
+            if (!isSupported) {
+                alert('กรุณาเลือกไฟล์วีดีโอหรือไฟล์เสียง (Video/Audio)');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('video', file);
+
+            progressContainer.style.display = 'block';
+            progressText.textContent = 'กำลังอัพโหลด... 0%';
+            progressFill.style.width = '0%';
+            
+            try {
+                // Use XMLHttpRequest for upload progress
+                const result = await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (e.lengthComputable) {
+                            const percentComplete = Math.round((e.loaded / e.total) * 100);
+                            progressText.textContent = `กำลังอัพโหลด... ${percentComplete}%`;
+                            progressFill.style.width = `${percentComplete}%`;
+                        }
+                    });
+                    
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status === 200) {
+                            try {
+                                resolve(JSON.parse(xhr.responseText));
+                            } catch (e) {
+                                reject(new Error('Invalid JSON response'));
+                            }
+                        } else {
+                            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                        }
+                    });
+                    
+                    xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+                    
+                    xhr.open('POST', `${UPLOAD_API}/upload`);
+                    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                    xhr.send(formData);
+                });
+
+                if (result.success) {
+                    progressText.textContent = 'อัพโหลดเสร็จสิ้น! กำลังประมวลผล...';
+                    progressFill.style.width = '100%';
+                    
+                    // Start monitoring processing progress
+                    monitorProcessingProgress(result.jobId);
+                    
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        progressFill.style.width = '0%';
+                        fileInput.value = '';
+                        // รีเฟรชรายการวิดีโอ
+                        loadVideos();
+                    }, 2000);
+                } else {
+                    if (response.status === 401 || response.status === 403) {
+                        localStorage.removeItem('token');
+                        alert('กรุณาเข้าสู่ระบบใหม่');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    throw new Error(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                progressText.textContent = 'อัพโหลดล้มเหลว';
+                alert(`การอัปโหลดล้มเหลว: ${error.message}`);
+                progressContainer.style.display = 'none';
+                progressFill.style.width = '0%';
+            }
+        }
+
+        // Monitor processing progress
+        async function monitorProcessingProgress(jobId) {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            
+            const checkProgress = async () => {
+                try {
+                    const response = await fetch(`${UPLOAD_API}/status/${jobId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const jobStatus = await response.json();
+                        
+                        if (jobStatus.status === 'processing' && jobStatus.progress !== undefined) {
+                            progressText.textContent = `ประมวลผล... ${jobStatus.progress}%`;
+                            progressFill.style.width = `${jobStatus.progress}%`;
+                            
+                            // Continue checking if not completed
+                            if (jobStatus.progress < 100) {
+                                setTimeout(checkProgress, 2000); // Check every 2 seconds
+                            } else {
+                                progressText.textContent = 'ประมวลผลเสร็จสิ้น!';
+                                setTimeout(() => {
+                                    progressContainer.style.display = 'none';
+                                    progressFill.style.width = '0%';
+                                    loadVideos(); // Refresh video list
+                                }, 2000);
+                            }
+                        } else if (jobStatus.status === 'completed') {
+                            progressText.textContent = 'ประมวลผลเสร็จสิ้น!';
+                            progressFill.style.width = '100%';
+                            setTimeout(() => {
+                                progressContainer.style.display = 'none';
+                                progressFill.style.width = '0%';
+                                loadVideos(); // Refresh video list
+                            }, 2000);
+                        } else if (jobStatus.status === 'failed') {
+                            progressText.textContent = 'ประมวลผลล้มเหลว';
+                            progressFill.style.backgroundColor = '#dc3545';
+                            setTimeout(() => {
+                                progressContainer.style.display = 'none';
+                                progressFill.style.width = '0%';
+                                progressFill.style.backgroundColor = '#4169E1';
+                            }, 3000);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking processing progress:', error);
+                }
+            };
+            
+            // Start checking progress after 1 second
+            setTimeout(checkProgress, 1000);
+        }
+
+        function scrollToUpload() {
+            document.getElementById('upload-section').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
         }
     </script>
 </body>

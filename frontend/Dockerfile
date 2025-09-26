@@ -1,10 +1,11 @@
 # Use minimal Nginx Alpine
 FROM nginx:alpine
 
-# Copy HTML file
-COPY index.html /usr/share/nginx/html/
+# Copy all HTML files
+COPY *.html /usr/share/nginx/html/
+COPY favicon.ico /usr/share/nginx/html/
 
-# Copy custom nginx config if needed
+# Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port

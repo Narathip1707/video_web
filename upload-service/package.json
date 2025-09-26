@@ -11,7 +11,9 @@
     "express": "4.18.2",
     "redis": "4.6.7",
     "cors": "2.8.5",
-    "express-fileupload": "1.4.0"
+    "express-fileupload": "1.4.0",
+    "jsonwebtoken": "9.0.2",
+    "pg": "8.11.3"
   },
   "engines": {
     "node": ">=18"

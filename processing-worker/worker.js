@@ -4,6 +4,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,15 @@ const redisClient = redis.createClient({
 
 redisClient.on('error', (err) => console.log('Redis Client Error', err));
 redisClient.connect();
+
+// PostgreSQL connection
+const pool = new Pool({
+  host: process.env.DB_HOST || 'postgres',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'videoapp',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'password'
+});
 
 // Enable CORS for all routes
 app.use(cors({
@@ -59,6 +69,52 @@ app.get('/stats', async (req, res) => {
     res.status(500).json({ error: 'Failed to get stats' });
   }
 });
+
+// Database update function
+async function updateVideoInDatabase(jobId, updates) {
+  try {
+    const fields = [];
+    const values = [];
+    let valueIndex = 1;
+
+    if (updates.status) {
+      fields.push(`status = $${valueIndex++}`);
+      values.push(updates.status);
+    }
+    if (updates.thumbnailPath) {
+      fields.push(`thumbnail_path = $${valueIndex++}`);
+      values.push(updates.thumbnailPath);
+    }
+    if (updates.compressedPath) {
+      fields.push(`compressed_path = $${valueIndex++}`);
+      values.push(updates.compressedPath);  
+    }
+    if (updates.convertedPath) {
+      fields.push(`converted_path = $${valueIndex++}`);
+      values.push(updates.convertedPath);
+    }
+    if (updates.duration) {
+      fields.push(`duration = $${valueIndex++}`);
+      values.push(updates.duration);
+    }
+    if (updates.width && updates.height) {
+      fields.push(`width = $${valueIndex++}`, `height = $${valueIndex++}`);
+      values.push(updates.width, updates.height);
+    }
+
+    if (fields.length > 0) {
+      fields.push(`updated_at = $${valueIndex++}`);
+      values.push(new Date());
+      values.push(jobId);
+
+      const query = `UPDATE videos SET ${fields.join(', ')} WHERE id = $${valueIndex}`;
+      await pool.query(query, values);
+      console.log(`📊 Database updated for video ID: ${jobId}`);
+    }
+  } catch (error) {
+    console.error('Database update failed:', error);
+  }
+}
 
 // Processing functions
 async function generateThumbnail(inputPath, outputDir, jobId) {
@@ -167,7 +223,7 @@ async function compressVideo(inputPath, outputDir, jobId) {
 
 // Main processing function
 async function processVideo(job) {
-  const { id, filePath, fileName, isAudio } = job;
+  const { id, dbId, filePath, fileName, isAudio } = job;
   const outputDir = '/app/outputs';
   
   try {
@@ -216,6 +272,24 @@ async function processVideo(job) {
     
     await redisClient.set(`job_${id}`, JSON.stringify(job));
     await redisClient.del(`job_${id}_processing`);
+    
+    // Update database
+    const dbUpdates = {
+      status: 'completed',
+      thumbnailPath: job.thumbnailPath,
+      compressedPath: job.compressedPath,
+      convertedPath: job.convertedPath
+    };
+    
+    if (job.metadata) {
+      dbUpdates.duration = job.metadata.duration;
+      if (job.metadata.video) {
+        dbUpdates.width = job.metadata.video.width;
+        dbUpdates.height = job.metadata.video.height;
+      }
+    }
+    
+    await updateVideoInDatabase(dbId || id, dbUpdates);
     
     console.log(`✅ Processing completed: ${fileName} (${job.processingTime}ms)`);
     

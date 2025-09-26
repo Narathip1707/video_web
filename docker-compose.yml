@@ -1,6 +1,26 @@
 version: '3.8'
 
 services:
+  # Database - PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: video-postgres
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=videoapp
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 80M
+        reservations:
+          memory: 40M
+
   # Redis Queue - เบาที่สุด
   redis:
     image: redis:7-alpine
@@ -9,6 +29,32 @@ services:
       - "6380:6379"
     command: redis-server --maxmemory 30mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
+
+  # Authentication Service
+  auth-service:
+    build: 
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: video-auth
+    ports:
+      - "3004:3000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=videoapp
+      - DB_USER=postgres
+      - DB_PASSWORD=password123
+      - JWT_SECRET=super-secret-jwt-key-change-in-production-123456
+      - NODE_ENV=production
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 60M
+        reservations:
+          memory: 30M
   
   # Upload Service - รับไฟล์และส่งเข้า queue
   upload-service:
@@ -23,16 +69,23 @@ services:
       - ./outputs:/app/outputs
     environment:
       - REDIS_URL=redis://redis:6379
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=videoapp
+      - DB_USER=postgres
+      - DB_PASSWORD=password123
+      - JWT_SECRET=super-secret-jwt-key-change-in-production-123456
       - NODE_ENV=production
     depends_on:
       - redis
+      - postgres
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 50M
+          memory: 60M
         reservations:
-          memory: 20M
+          memory: 30M
   
   # Processing Worker - ประมวลผลวีดีโอ
   processing-worker:
@@ -47,9 +100,15 @@ services:
       - ./outputs:/app/outputs
     environment:
       - REDIS_URL=redis://redis:6379
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=videoapp
+      - DB_USER=postgres
+      - DB_PASSWORD=password123
       - NODE_ENV=production
     depends_on:
       - redis
+      - postgres
     restart: unless-stopped
     deploy:
       resources:
@@ -66,6 +125,9 @@ services:
     container_name: video-frontend
     ports:
       - "3001:80"
+    volumes:
+      - ./uploads:/usr/share/nginx/html/uploads
+      - ./outputs:/usr/share/nginx/html/outputs
     environment:
       - UPLOAD_SERVICE_URL=http://localhost:3002
       - WORKER_SERVICE_URL=http://localhost:3003
@@ -83,6 +145,7 @@ services:
 volumes:
   uploads:
   outputs:
+  postgres_data:
 
 networks:
   default:

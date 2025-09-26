@@ -1,23 +1,42 @@
 # Video Processing Pipeline
 
-A lightweight video processing system using Docker containers with minimal RAM usage.
+Complete video management system with authentication, upload, processing, and playback capabilities.
 
 ## 🚀 Features
 
-- **📤 Video Upload**: Simple drag & drop interface
-- **🔄 Background Processing**: Queue-based video processing
-- **📸 Thumbnail Generation**: Auto-generate video thumbnails
-- **📊 Metadata Extraction**: Get video info (duration, resolution, codec)
-- **🗜️ Video Compression**: Compress videos to save space
-- **💾 Low Memory Usage**: Total RAM usage ~220MB
-- **🐳 Docker Ready**: Complete containerization
-- **🔄 Real-time Updates**: Live job status monitoring
+- **� Authentication**: JWT-based user login and registration system
+- **�📤 Video Upload**: Drag & drop interface with real-time progress tracking
+- **🔄 Background Processing**: Queue-based video processing with live status updates
+- **📸 Thumbnail Generation**: Automatic video thumbnail creation
+- **🎬 Video Playback**: Built-in video player with download options
+- **📊 Video Management**: Dashboard with statistics and file management
+- **🗜️ Video Compression**: FFmpeg-based video compression and optimization
+- **🐳 Docker Ready**: Complete microservices containerization
+- **⚡ Real-time Progress**: Live upload and processing progress monitoring
 
 ## 🏗️ Architecture
 
 ```
-Frontend (Nginx) --> Upload Service (Node.js) --> Redis Queue --> Processing Worker (FFmpeg)
-   40MB RAM             50MB RAM                    30MB RAM        100MB RAM
+                     ┌─────────────────┐
+                     │    Frontend     │
+                     │   (Nginx)       │
+                     │   Port: 3001    │
+                     └─────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              │               │               │
+    ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+    │  Auth Service   │ │ Upload Service  │ │ Processing      │
+    │   (Node.js)     │ │   (Node.js)     │ │   Worker        │
+    │   Port: 3004    │ │   Port: 3002    │ │   (FFmpeg)      │
+    └─────────────────┘ └─────────────────┘ │   Port: 3003    │
+              │               │             └─────────────────┘
+              │               │                       │
+    ┌─────────────────┐ ┌─────────────────┐         │
+    │   PostgreSQL    │ │     Redis       │─────────┘
+    │   Database      │ │     Queue       │
+    │   Port: 5434    │ │   Port: 6380    │
+    └─────────────────┘ └─────────────────┘
 ```
 
 ## 📁 Project Structure
@@ -43,14 +62,16 @@ video-processing-pipeline/
 
 ## 🛠️ Services & Ports
 
-| Service | Port | Purpose | RAM Limit |
-|---------|------|---------|-----------|
-| Frontend | 3001 | Web UI | 40MB |
-| Upload Service | 3002 | File uploads | 50MB |
-| Processing Worker | 3003 | Video processing | 120MB |
-| Redis | 6380 | Job queue | 30MB |
+| Service | Port | Purpose | Technology |
+|---------|------|---------|------------|
+| Frontend | 3001 | Web UI & Static Files | Nginx Alpine |
+| Upload Service | 3002 | File uploads & Job Queue | Node.js + Express |
+| Processing Worker | 3003 | Video processing | Node.js + FFmpeg |
+| Auth Service | 3004 | Authentication & User Management | Node.js + JWT |
+| PostgreSQL | 5434 | User & Video Database | PostgreSQL 15-alpine |
+| Redis | 6380 | Job queue & Session Cache | Redis Alpine |
 
-**Total RAM Usage: ~240MB**
+**Complete microservices architecture with authentication and persistent storage**
 
 ## 🚀 Quick Start
 
@@ -73,16 +94,21 @@ video-processing-pipeline/
 
 ## 📊 API Endpoints
 
+### Auth Service (Port 3004)
+- `POST /login` - User authentication
+- `POST /register` - User registration
+- `GET /videos` - Get user's videos (JWT required)
+- `DELETE /videos/:id` - Delete user's video (JWT required)
+
 ### Upload Service (Port 3002)
-- `POST /upload` - Upload video file
-- `GET /job/:id` - Get job status
-- `GET /jobs` - List all jobs
+- `POST /upload` - Upload video file (JWT required)
+- `GET /status/:jobId` - Get processing status
 - `GET /download/:filename` - Download processed file
 - `GET /health` - Health check
 
 ### Processing Worker (Port 3003)
 - `GET /health` - Health check
-- `GET /stats` - Worker statistics
+- Background job processing via Redis queue
 
 ## 🔧 Configuration
 
@@ -110,13 +136,50 @@ Edit `processing-worker/worker.js`:
 - **Active Jobs**: Currently processing
 - **Memory Usage**: Per-service memory consumption
 
-## 🛡️ Security Features
+## 🛡️ Security Features & Considerations
 
+### Built-in Security
+- JWT authentication with 7-day token expiration
+- Password hashing with bcrypt
 - Non-root container users
-- File size limits (100MB max)
-- Input validation
-- Health checks
-- Resource limits
+- File upload size limits (100MB max)
+- Input validation and sanitization
+- Health checks for all services
+- Container resource limits
+
+### ⚠️ Before Production Deployment
+
+**CRITICAL**: Change these default values before deploying:
+
+1. **Database Security**
+   ```bash
+   # Change in docker-compose.yml
+   POSTGRES_PASSWORD: "your-secure-password-here"
+   DB_PASSWORD: "your-secure-password-here"
+   ```
+
+2. **JWT Secret**
+   ```bash
+   # Use a strong random secret (32+ characters)
+   JWT_SECRET: "your-super-secure-jwt-secret-key-here"
+   ```
+
+3. **Additional Security Measures**
+   - Set up SSL/TLS certificates
+   - Configure firewall rules
+   - Use environment variables for secrets (not docker-compose.yml)
+   - Set up regular database backups
+   - Monitor file upload directories
+   - Configure rate limiting
+   - Set up log monitoring
+
+### Files Excluded from Git
+The `.gitignore` file excludes:
+- `uploads/` and `outputs/` directories
+- Environment files (`.env`, `.env.local`)
+- Database data and logs
+- Node.js modules and dependencies
+- Docker volumes and sensitive files
 
 ## 🐛 Troubleshooting
 
